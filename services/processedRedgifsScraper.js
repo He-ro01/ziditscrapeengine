@@ -67,9 +67,10 @@ async function scrapeRedgifsData(url) {
     data.likes = await preview.$eval('button[aria-label="toggle like button"] .label', el =>
       el.textContent?.trim()
     ).catch(() => null);
-data.imageUrl = await preview.$eval('.UserInfo-ImageWrap img', el =>
-  el.getAttribute('src')
-).catch(() => null);
+
+    data.imageUrl = await preview.$eval('.UserInfo-ImageWrap img', el =>
+      el.getAttribute('src')
+    ).catch(() => null);
 
     const rawMatch = html.match(/https:\/\/media\.redgifs\.com\/([\w-]+)-silent\.mp4/);
     data.videoUrl = rawMatch
@@ -85,6 +86,24 @@ data.imageUrl = await preview.$eval('.UserInfo-ImageWrap img', el =>
     console.log(`• Bytes: ${sizeInfo.bytes}`);
     console.log(`• KB   : ${sizeInfo.kb} KB`);
     console.log(`• MB   : ${sizeInfo.mb} MB\n`);
+
+    // Check for existing entry
+    const existing = await Processed.findOne({ rawUrl: url });
+
+    if (existing) {
+      // Remove MongoDB metadata
+      const existingKeys = Object.keys(existing.toObject()).filter(k => !['_id', '__v'].includes(k)).sort();
+      const newKeys = Object.keys(data).sort();
+
+      const schemaMismatch = JSON.stringify(existingKeys) !== JSON.stringify(newKeys);
+
+      if (!schemaMismatch) {
+        console.log(`⏩ Skipping ${url} — already exists with matching schema`);
+        return null;
+      }
+
+      console.log(`🔁 Schema mismatch found — updating existing entry`);
+    }
 
     await Processed.findOneAndUpdate(
       { rawUrl: url },

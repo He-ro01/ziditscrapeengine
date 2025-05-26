@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Redgifs Scraper Trigger</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 0 20px;
+      text-align: center;
+    }
+    button {
+      padding: 12px 24px;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+    #result {
+      margin-top: 30px;
+      font-size: 16px;
+      text-align: left;
+      word-wrap: break-word;
+    }
+    .error {
+      color: red;
+    }
+    .success {
+      color: green;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Redgifs Scraper</h1>
+  <button id="scrapeBtn">Start Scraping</button>
+  
+  <div id="result"></div>
+
+  <script>
+    const btn = document.getElementById('scrapeBtn');
+    const resultDiv = document.getElementById('result');
+
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      btn.textContent = 'Scraping...';
+      resultDiv.textContent = '';
+
+      try {
+        const response = await fetch('http://16.170.228.154:3000/api/scrape/scrape-redgifs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        resultDiv.innerHTML = `
+          <h3 class="success">Scraping Completed!</h3>
+          <p><strong>Processed:</strong> ${data.processed}</p>
+          <p><strong>Total:</strong> ${data.total}</p>
+          <p><strong>Message:</strong> ${data.message}</p>
+        `;
+      } catch (err) {
+        resultDiv.innerHTML = `<p class="error">Error: ${err.message}</p>`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Start Scraping';
+      }
+    });
+  </script>
+
+</body>
+</html>
