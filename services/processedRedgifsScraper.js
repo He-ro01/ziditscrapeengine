@@ -13,7 +13,6 @@ function getRoughSizeOfObject(obj) {
 
 const MONGO_URI_PROCESSED_VIDS = process.env.MONGO_URI_PROCESSED_VIDS;
 
-// ✅ Create and monitor a dedicated connection
 const processedMongoose = createConnection(MONGO_URI_PROCESSED_VIDS, {
   useNewUrlParser: true,
   useUnifiedTopology: true
@@ -27,10 +26,16 @@ processedMongoose.once('error', (err) =>
   console.error('❌ Processed DB connection error:', err)
 );
 
-// ✅ Instantiate model from isolated connection
 const Processed = createProcessedModel(processedMongoose);
 
 async function scrapeRedgifsData(url) {
+  // ✅ Skip if already processed
+  const exists = await Processed.findOne({ rawUrl: url });
+  if (exists) {
+    console.log(`⏩ Skipping already processed: ${url}`);
+    return null;
+  }
+
   const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
 
@@ -87,30 +92,7 @@ async function scrapeRedgifsData(url) {
     console.log(`• KB   : ${sizeInfo.kb} KB`);
     console.log(`• MB   : ${sizeInfo.mb} MB\n`);
 
-    // Check for existing entry
-    const existing = await Processed.findOne({ rawUrl: url });
-
-    if (existing) {
-      // Remove MongoDB metadata
-      const existingKeys = Object.keys(existing.toObject()).filter(k => !['_id', '__v'].includes(k)).sort();
-      const newKeys = Object.keys(data).sort();
-
-      const schemaMismatch = JSON.stringify(existingKeys) !== JSON.stringify(newKeys);
-
-      if (!schemaMismatch) {
-        console.log(`⏩ Skipping ${url} — already exists with matching schema`);
-        return null;
-      }
-
-      console.log(`🔁 Schema mismatch found — updating existing entry`);
-    }
-
-    await Processed.findOneAndUpdate(
-      { rawUrl: url },
-      { $set: data },
-      { upsert: true, new: true }
-    );
-
+    await Processed.create(data);
     console.log(`✅ Scraped and saved: ${url}`);
     return data;
 
