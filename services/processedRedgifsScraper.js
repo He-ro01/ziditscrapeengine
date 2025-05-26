@@ -31,7 +31,7 @@ processedMongoose.once('error', (err) =>
 const Processed = createProcessedModel(processedMongoose);
 
 async function scrapeRedgifsData(url) {
-  const browser = await puppeteer.launch({ headless: false });
+  const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
 
   try {
