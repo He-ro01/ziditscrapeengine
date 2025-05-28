@@ -35,13 +35,13 @@ async function scrapeRedgifsData(url) {
     console.log(`⏩ Skipping already processed: ${url}`);
     return null;
   }
-
-  const browser = await puppeteer.launch({ headless: true , args: ['--no-sandbox', '--disable-setuid-sandbox']});
+  console.log(`command recieved: ${url}`);
+  const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
 
   try {
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
-    await page.waitForSelector('.previewFeed', { timeout: 15000 });
+    await page.goto(url, { waitUntil: 'networkidle2', timeout: 600000 });
+    await page.waitForSelector('.previewFeed', { timeout: 150000 });
 
     const html = await page.content();
     const preview = await page.$('.previewFeed');
