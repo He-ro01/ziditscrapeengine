@@ -2,7 +2,7 @@
 
 
 const axios = require('axios');
-const { getAccessToken } = require('../Auth/redditAuth');
+const { getAccessToken } = require('../auth/redditAuth');
 
 
 async function scrapeUserMedia(username) {

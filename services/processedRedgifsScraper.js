@@ -11,7 +11,7 @@ function getRoughSizeOfObject(obj) {
   return { bytes, kb, mb };
 }
 
-const MONGO_URI_PROCESSED_VIDS = process.env.MONGO_URI_PROCESSED_VIDS;
+const MONGO_URI_PROCESSED_VIDS = "mongodb+srv://ziditstudios:jE8WvcrM8WZfwcFZ@hero.povfhja.mongodb.net/";
 
 const processedMongoose = createConnection(MONGO_URI_PROCESSED_VIDS, {
   useNewUrlParser: true,
