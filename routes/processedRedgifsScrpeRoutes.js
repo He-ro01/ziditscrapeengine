@@ -8,7 +8,7 @@ const { scrapeRedgifsData } = require('../services/processedRedgifsScraper');
 router.post('/scrape-redgifs', async (req, res) => {
   try {
     console.log(`counting items`);
-    const raws = await RedgifsRaw.find(); // Fetch all raw redgifs links
+    const raws = 10000;//await RedgifsRaw.find(); // Fetch all raw redgifs links
     let processedCount = 0;
     const total = raws.length;
 
