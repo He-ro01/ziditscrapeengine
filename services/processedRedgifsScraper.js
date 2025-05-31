@@ -1,7 +1,7 @@
 require('dotenv').config();
 const { createConnection } = require('mongoose');
-const puppeteer = require('puppeteer');
 const createProcessedModel = require('../models/ProcessedRedGifs');
+const { chromium } = require('playwright-core');
 
 function getRoughSizeOfObject(obj) {
   const json = JSON.stringify(obj);
@@ -29,18 +29,19 @@ processedMongoose.once('error', (err) =>
 const Processed = createProcessedModel(processedMongoose);
 
 async function scrapeRedgifsData(url) {
-  // ✅ Skip if already processed
   const exists = await Processed.findOne({ rawUrl: url });
   if (exists) {
     console.log(`⏩ Skipping already processed: ${url}`);
     return null;
   }
-  console.log(`command recieved: ${url}`);
-  const browser = await puppeteer.launch({ headless: true });
+
+  console.log(`command received: ${url}`);
+
+  const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
 
   try {
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 600000 });
+    await page.goto(url, { waitUntil: 'networkidle', timeout: 600000 });
     await page.waitForSelector('.previewFeed', { timeout: 150000 });
 
     const html = await page.content();
