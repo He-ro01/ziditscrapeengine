@@ -1,8 +1,9 @@
 require('dotenv').config();
 const { createConnection } = require('mongoose');
-const puppeteer = require('puppeteer');
-const createProcessedModel = require('../models/ProcessedRedGifs');
+const puppeteer = require('puppeteer-core');
 
+const createProcessedModel = require('../models/ProcessedRedGifs');
+const chromium = require('@sparticuz/chromium');
 function getRoughSizeOfObject(obj) {
   const json = JSON.stringify(obj);
   const bytes = Buffer.byteLength(json, 'utf8');
@@ -28,20 +29,29 @@ processedMongoose.once('error', (err) =>
 
 const Processed = createProcessedModel(processedMongoose);
 
+
 async function scrapeRedgifsData(url) {
-  // ✅ Skip if already processed
   const exists = await Processed.findOne({ rawUrl: url });
   if (exists) {
     console.log(`⏩ Skipping already processed: ${url}`);
     return null;
   }
-  console.log(`command recieved: ${url}`);
-  const browser = await puppeteer.launch({ headless: true });
-  const page = await browser.newPage();
 
+  console.log(`command recieved: ${url}`);
+
+  let browser;
   try {
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 600000 });
-    await page.waitForSelector('.previewFeed', { timeout: 150000 });
+    browser = await puppeteer.launch({
+      executablePath: await chromium.executablePath(), // ✅ dynamic
+      headless: true,
+      args: [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox'],
+      defaultViewport: chromium.defaultViewport,
+    });
+
+    const page = await browser.newPage();
+
+    await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
+    await page.waitForSelector('.previewFeed', { timeout: 15000 });
 
     const html = await page.content();
     const preview = await page.$('.previewFeed');
@@ -100,7 +110,7 @@ async function scrapeRedgifsData(url) {
     console.error(`❌ Failed to scrape ${url}: ${err.message}`);
     return null;
   } finally {
-    await browser.close();
+    if (browser) await browser.close();
   }
 }
 
