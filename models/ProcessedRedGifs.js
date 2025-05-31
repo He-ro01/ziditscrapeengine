@@ -11,9 +11,7 @@ const processedSchema = new mongoose.Schema({
   rawUrl: { type: String, unique: true },
   scrapedAt: Date,
   imageUrl: String,
-
 });
 
-// Export a function that creates the model from a specific connection
 module.exports = (connection) =>
   connection.model('ProcessedRedgifs', processedSchema);

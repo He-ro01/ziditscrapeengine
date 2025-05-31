@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
-const redgifsRawSchema = new mongoose.Schema({}, { strict: false }); // Store full raw Reddit post
+// Flexible schema: accepts any structure, but URL is expected
+const redgifsRawSchema = new mongoose.Schema({}, { strict: false });
 
 module.exports = mongoose.model('RedgifsRaw', redgifsRawSchema);
